@@ -14,6 +14,7 @@
 
 #import <UIKit/UIKit.h>
 #import "JSBubbleImageViewFactory.h"
+#import "JSMessage.h"
 
 /**
  *  An instance of JSBubbleView is a means for displaying text in a speech bubble image to be placed in a JSBubbleMessageCell. 
@@ -53,14 +54,12 @@
  *  Initializes and returns a bubble view object having the given frame, bubble type, and bubble image view.
  *
  *  @param frame           A rectangle specifying the initial location and size of the bubble view in its superview's coordinates.
- *  @param bubleType       A constant that specifies the type of the bubble view. @see JSBubbleMessageType.
- *  @param bubbleImageView An image view initialized with an image and highlighted image for this bubble view. @see JSBubbleImageViewFactory.
+ *  @param message         The JSMessage to use for this bubbleview. @see JSBubbleMessageType.
  *
  *  @return An initialized `JSBubbleView` object or `nil` if the object could not be successfully initialized.
  */
 - (instancetype)initWithFrame:(CGRect)frame
-                   bubbleType:(JSBubbleMessageType)bubleType
-              bubbleImageView:(UIImageView *)bubbleImageView;
+                   message:(JSMessage *)message;
 
 #pragma mark - Getters
 

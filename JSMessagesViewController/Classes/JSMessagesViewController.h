@@ -19,77 +19,7 @@
 #import "JSBubbleImageViewFactory.h"
 #import "JSMessageSoundEffect.h"
 #import "UIColor+JSMessagesView.h"
-
-/**
- *  The frequency with which timestamps are displayed in the messages table view.
- */
-typedef NS_ENUM(NSUInteger, JSMessagesViewTimestampPolicy) {
-    /**
-     *  Displays a timestamp above every message bubble.
-     */
-    JSMessagesViewTimestampPolicyAll,
-    /**
-     *  Displays a timestamp above every second message bubble.
-     */
-    JSMessagesViewTimestampPolicyAlternating,
-    /**
-     *  Displays a timestamp above every third message bubble.
-     */
-    JSMessagesViewTimestampPolicyEveryThree,
-    /**
-     *  Displays a timestamp above every fifth message bubble.
-     */
-    JSMessagesViewTimestampPolicyEveryFive,
-    /**
-     *  Displays a timestamp based on the result of the optional delegate method `hasTimestampForRowAtIndexPath:`. 
-     *  @see JSMessagesViewDelegate.
-     */
-    JSMessagesViewTimestampPolicyCustom
-};
-
-/**
- *  The method by which avatars are displayed in the messages table view.
- */
-typedef NS_ENUM(NSUInteger, JSMessagesViewAvatarPolicy) {
-    /**
-     *  Displays an avatar for all incoming and all outgoing messages.
-     */
-    JSMessagesViewAvatarPolicyAll,
-    /**
-     *  Displays an avatar for incoming messages only.
-     */
-    JSMessagesViewAvatarPolicyIncomingOnly,
-    /**
-     *  Display an avatar for outgoing messages only.
-     */
-    JSMessagesViewAvatarPolicyOutgoingOnly,
-    /**
-     *  Does not display any avatars.
-     */
-    JSMessagesViewAvatarPolicyNone
-};
-
-/**
- *  The method by which subtitles are displayed in the messages table view.
- */
-typedef NS_ENUM(NSUInteger, JSMessagesViewSubtitlePolicy) {
-    /**
-     *  Displays a subtitle for all incoming and all outgoing messages.
-     */
-    JSMessagesViewSubtitlePolicyAll,
-    /**
-     *  Displays a subtitle for incoming messages only.
-     */
-    JSMessagesViewSubtitlePolicyIncomingOnly,
-    /**
-     *  Displays a subtitle for outgoing messages only.
-     */
-    JSMessagesViewSubtitlePolicyOutgoingOnly,
-    /**
-     *  Does not display any subtitles.
-     */
-    JSMessagesViewSubtitlePolicyNone
-};
+#import "JSMessage.h"
 
 /**
  *  The delegate of a `JSMessagesViewController` must adopt the `JSMessagesViewDelegate` protocol.
@@ -104,52 +34,6 @@ typedef NS_ENUM(NSUInteger, JSMessagesViewSubtitlePolicy) {
  *  @param text A string containing the text that was present in the messageInputView's textView when the send button was pressed.
  */
 - (void)didSendText:(NSString *)text;
-
-/**
- *  Asks the delegate for the message type for the row at the specified index path.
- *
- *  @param indexPath The index path of the row to be displayed.
- *
- *  @return A constant describing the message type. 
- *  @see JSBubbleMessageType.
- */
-- (JSBubbleMessageType)messageTypeForRowAtIndexPath:(NSIndexPath *)indexPath;
-
-/**
- *  Asks the delegate for the bubble image view for the row at the specified index path with the specified type.
- *
- *  @param type      The type of message for the row located at indexPath.
- *  @param indexPath The index path of the row to be displayed.
- *
- *  @return A `UIImageView` with both `image` and `highlightedImage` properties set. 
- *  @see JSBubbleImageViewFactory.
- */
-- (UIImageView *)bubbleImageViewWithType:(JSBubbleMessageType)type
-                       forRowAtIndexPath:(NSIndexPath *)indexPath;
-
-/**
- *  Asks the delegate for the timestamp policy.
- *
- *  @return A constant describing the timestamp policy. 
- *  @see JSMessagesViewTimestampPolicy.
- */
-- (JSMessagesViewTimestampPolicy)timestampPolicy;
-
-/**
- *  Asks the delegate for the avatar policy.
- *
- *  @return A constant describing the avatar policy. 
- *  @see JSMessagesViewAvatarPolicy.
- */
-- (JSMessagesViewAvatarPolicy)avatarPolicy;
-
-/**
- *  Asks the delegate for the subtitle policy.
- *
- *  @return A constant describing the subtitle policy. 
- *  @see JSMessagesViewSubtitlePolicy.
- */
-- (JSMessagesViewSubtitlePolicy)subtitlePolicy;
 
 /**
  *  Asks the delegate for the input view style.
@@ -168,15 +52,6 @@ typedef NS_ENUM(NSUInteger, JSMessagesViewSubtitlePolicy) {
  *  @param indexPath The index path for cell.
  */
 - (void)configureCell:(JSBubbleMessageCell *)cell atIndexPath:(NSIndexPath *)indexPath;
-
-/**
- *  Asks the delegate if the row at the specified index path should display a timestamp. You should only implement this method if using `JSMessagesViewTimestampPolicyCustom`. @see JSMessagesViewTimestampPolicy.
- *
- *  @param indexPath The index path of the row to be displayed.
- *
- *  @return `YES` if the row should display a timestamp, `NO` otherwise.
- */
-- (BOOL)hasTimestampForRowAtIndexPath:(NSIndexPath *)indexPath;
 
 /**
  *  Asks the delegate if should always scroll to bottom automatically when new messages are sent or received.
@@ -201,40 +76,15 @@ typedef NS_ENUM(NSUInteger, JSMessagesViewSubtitlePolicy) {
 @required
 
 /**
- *  Asks the data source for the text to display for the row at the specified index path.
+ *  Asks the data source for the message to display at the specified index path.
  *
- *  @param indexPath An index path locating a row in the table view.
+ *  @param indexPath An index path indicating the position of the message requested.
  *
- *  @return A string containing text for a message. This value must not be `nil`.
+ *  @return A JSMessage object representing the message. This value must not be `nil`,
+ *  though you can return null for components of the JSMessage that you don't want to
+ *  be displayed, such as the avatar, author name, timestamp, etc.
  */
-- (NSString *)textForRowAtIndexPath:(NSIndexPath *)indexPath;
-
-/**
- *  Asks the data source for the date to display in the timestamp label *above* the row at the specified index path.
- *
- *  @param indexPath An index path locating a row in the table view.
- *
- *  @return A date object specifying when the message at indexPath was sent. This value may be `nil`.
- */
-- (NSDate *)timestampForRowAtIndexPath:(NSIndexPath *)indexPath;
-
-/**
- *  Asks the data source for the imageView to display for the row at the specified index path. The imageView must have its `image` property set.
- *
- *  @param indexPath An index path locating a row in the table view.
- *
- *  @return An image view specifying the avatar for the message at indexPath. This value may be `nil`.
- */
-- (UIImageView *)avatarImageViewForRowAtIndexPath:(NSIndexPath *)indexPath;
-
-/**
- *  Asks the data source for the text to display in the subtitle label *below* the row at the specified index path.
- *
- *  @param indexPath An index path locating a row in the table view.
- *
- *  @return A string containing the subtitle for the message at indexPath. This value may be `nil`.
- */
-- (NSString *)subtitleForRowAtIndexPath:(NSIndexPath *)indexPath;
+- (JSMessage *)messageForIndexPath:(NSIndexPath *)indexPath;
 
 @end
 

@@ -54,22 +54,21 @@
 #pragma mark - Initialization
 
 - (instancetype)initWithFrame:(CGRect)frame
-                   bubbleType:(JSBubbleMessageType)bubleType
-              bubbleImageView:(UIImageView *)bubbleImageView
+                      message:(JSMessage *)message
 {
     self = [super initWithFrame:frame];
     if(self) {
         [self setup];
         
-        _type = bubleType;
+        _type = message.bubbleType;
         
-        bubbleImageView.userInteractionEnabled = YES;
-        [self addSubview:bubbleImageView];
-        _bubbleImageView = bubbleImageView;
+        _bubbleImageView = message.bubbleImageView;
+        _bubbleImageView.userInteractionEnabled = YES;
+        [self addSubview:_bubbleImageView];
         
         UITextView *textView = [[UITextView alloc] init];
         textView.font = [UIFont systemFontOfSize:16.0f];
-        textView.textColor = [UIColor blackColor];
+        textView.textColor = (message.textColor) ? message.textColor : [UIColor darkTextColor];
         textView.editable = NO;
         textView.userInteractionEnabled = YES;
         textView.showsHorizontalScrollIndicator = NO;

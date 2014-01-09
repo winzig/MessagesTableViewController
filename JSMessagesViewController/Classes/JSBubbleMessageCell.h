@@ -14,6 +14,7 @@
 
 #import <UIKit/UIKit.h>
 #import "JSBubbleView.h"
+#import "JSMessage.h"
 
 /**
  *  The `JSBubbleMessageCell` class defines the attributes and behavior of the cells that appear in `JSMessagesViewController`. This class includes properties and methods for setting and managing cell content.
@@ -43,28 +44,18 @@
  *  Returns the label used to display the subtitle for the cell. This property may be `nil` if no subtitle is provided. 
  *  @see JSMessagesViewDataSource.
  */
-@property (weak, nonatomic, readonly) UILabel *subtitleLabel;
+@property (weak, nonatomic, readonly) UILabel *nameLabel;
 
 #pragma mark - Initialization
 
 /**
  *  Initializes a message cell and returns it to the caller.
  *
- *  @param type            A constant indicating a message type. @see JSBubbleMessageType for details.
- *  @param bubbleImageView An image view initialized with bubble images. The `UIImageView` properties `image` and `highlightedImage` must not be `nil`. @see JSBubbleImageViewFactory.
- *  @param hasTimestamp    A boolean value indicating whether or not the cell should be initialized with a timestampLabel. Pass `YES` to initialize with a timestamp, `NO` otherwise.
- *  @param hasAvatar       A boolean value indicating whether or not the cell should be initialized with an avatarImageView. Pass `YES` to initialize with an avatar, `NO` otherwise.
- *  @param hasSubtitle     A boolean value indicating whether or not the cell should be initialized with a subtitleLabel. Pass `YES` to initialize with a subtitle, `NO` otherwise.
- *  @param reuseIdentifier A string used to identify the cell object to be reused for drawing multiple rows of a JSMessagesViewController. This property must not be `nil`.
+ *  @param message         The JSMessage to use for this cell. @see JSBubbleMessageType for details.
  *
  *  @return An initialized `JSBubbleMessageCell` object or `nil` if the object could not be created.
  */
-- (instancetype)initWithBubbleType:(JSBubbleMessageType)type
-                   bubbleImageView:(UIImageView *)bubbleImageView
-                      hasTimestamp:(BOOL)hasTimestamp
-                         hasAvatar:(BOOL)hasAvatar
-                       hasSubtitle:(BOOL)hasSubtitle
-                   reuseIdentifier:(NSString *)reuseIdentifier;
+- (instancetype)initWithMessage:(JSMessage*)message;
 
 #pragma mark - Setters
 
@@ -94,7 +85,7 @@
  *
  *  @param subtitle The subtitle text for the cell.
  */
-- (void)setSubtitle:(NSString *)subtitle;
+- (void)setName:(NSString *)name;
 
 #pragma mark - Getters
 
@@ -111,16 +102,10 @@
 /**
  *  Computes and returns the minimum necessary height of a `JSBubbleMessageCell` needed to display its contents.
  *
- *  @param text         The text to display in the cell.
- *  @param hasTimestamp A boolean value indicating whether or not the cell has a timestamp.
- *  @param hasAvatar    A boolean value indicating whether or not the cell has an avatar.
- *  @param hasSubtitle  A boolean value indicating whether or not the cell has a subtitle.
+ *  @param message      The JSMessage to display
  *
  *  @return The height required for the frame of the cell in order for the cell to display the entire contents of its subviews.
  */
-+ (CGFloat)neededHeightForBubbleMessageCellWithText:(NSString *)text
-                                          timestamp:(BOOL)hasTimestamp
-                                             avatar:(BOOL)hasAvatar
-                                           subtitle:(BOOL)hasSubtitle;
++ (CGFloat)neededHeightForBubbleMessageCellWithMessage:(JSMessage *)message;
 
 @end

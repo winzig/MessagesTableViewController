@@ -50,7 +50,7 @@
                        [NSDate date],
                        nil];
     
-    self.subtitles = [[NSMutableArray alloc] initWithObjects:
+    self.names = [[NSMutableArray alloc] initWithObjects:
                       kSubtitleJobs,
                       kSubtitleWoz,
                       kSubtitleJobs,
@@ -92,48 +92,16 @@
     if((self.messages.count - 1) % 2) {
         [JSMessageSoundEffect playMessageSentSound];
         
-        [self.subtitles addObject:arc4random_uniform(100) % 2 ? kSubtitleCook : kSubtitleWoz];
+        [self.names addObject:arc4random_uniform(100) % 2 ? kSubtitleCook : kSubtitleWoz];
     }
     else {
         [JSMessageSoundEffect playMessageReceivedSound];
         
-        [self.subtitles addObject:kSubtitleJobs];
+        [self.names addObject:kSubtitleJobs];
     }
     
     [self finishSend];
     [self scrollToBottomAnimated:YES];
-}
-
-- (JSBubbleMessageType)messageTypeForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    return (indexPath.row % 2) ? JSBubbleMessageTypeIncoming : JSBubbleMessageTypeOutgoing;
-}
-
-- (UIImageView *)bubbleImageViewWithType:(JSBubbleMessageType)type
-                       forRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    if(indexPath.row % 2) {
-        return [JSBubbleImageViewFactory bubbleImageViewForType:type
-                                                          color:[UIColor js_bubbleLightGrayColor]];
-    }
-    
-    return [JSBubbleImageViewFactory bubbleImageViewForType:type
-                                                      color:[UIColor js_bubbleBlueColor]];
-}
-
-- (JSMessagesViewTimestampPolicy)timestampPolicy
-{
-    return JSMessagesViewTimestampPolicyEveryThree;
-}
-
-- (JSMessagesViewAvatarPolicy)avatarPolicy
-{
-    return JSMessagesViewAvatarPolicyAll;
-}
-
-- (JSMessagesViewSubtitlePolicy)subtitlePolicy
-{
-    return JSMessagesViewSubtitlePolicyAll;
 }
 
 - (JSMessageInputViewStyle)inputViewStyle
@@ -148,31 +116,13 @@
 //
 - (void)configureCell:(JSBubbleMessageCell *)cell atIndexPath:(NSIndexPath *)indexPath
 {
-    if([cell messageType] == JSBubbleMessageTypeOutgoing) {
-        cell.bubbleView.textView.textColor = [UIColor whiteColor];
-    
-        if([cell.bubbleView.textView respondsToSelector:@selector(linkTextAttributes)]) {
-            NSMutableDictionary *attrs = [cell.bubbleView.textView.linkTextAttributes mutableCopy];
-            [attrs setValue:[UIColor blueColor] forKey:UITextAttributeTextColor];
-            
-            cell.bubbleView.textView.linkTextAttributes = attrs;
-        }
-    }
-    
-    if(cell.timestampLabel) {
-        cell.timestampLabel.textColor = [UIColor lightGrayColor];
-        cell.timestampLabel.shadowOffset = CGSizeZero;
-    }
-    
-    if(cell.subtitleLabel) {
-        cell.subtitleLabel.textColor = [UIColor lightGrayColor];
+    if([cell.bubbleView.textView respondsToSelector:@selector(linkTextAttributes)]) {
+       NSMutableDictionary *attrs = [cell.bubbleView.textView.linkTextAttributes mutableCopy];
+        [attrs setValue:[UIColor blueColor] forKey:UITextAttributeTextColor];
+        
+        cell.bubbleView.textView.linkTextAttributes = attrs;
     }
 }
-
-//  *** Required if using `JSMessagesViewTimestampPolicyCustom`
-//
-//  - (BOOL)hasTimestampForRowAtIndexPath:(NSIndexPath *)indexPath
-//
 
 //  *** Implement to use a custom send button
 //
@@ -190,26 +140,36 @@
 
 #pragma mark - Messages view data source: REQUIRED
 
-- (NSString *)textForRowAtIndexPath:(NSIndexPath *)indexPath
+- (JSMessage *)messageForIndexPath:(NSIndexPath *)indexPath
 {
-    return [self.messages objectAtIndex:indexPath.row];
-}
-
-- (NSDate *)timestampForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    return [self.timestamps objectAtIndex:indexPath.row];
-}
-
-- (UIImageView *)avatarImageViewForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    NSString *subtitle = [self.subtitles objectAtIndex:indexPath.row];
-    UIImage *image = [self.avatars objectForKey:subtitle];
-    return [[UIImageView alloc] initWithImage:image];
-}
-
-- (NSString *)subtitleForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    return [self.subtitles objectAtIndex:indexPath.row];
+    JSBubbleMessageType type;
+    UIColor *bubbleColor;
+    UIColor *textColor;
+    UIColor *nameColor = [UIColor lightGrayColor];
+    UIColor *timestampColor = [UIColor lightGrayColor];
+    
+    if (indexPath.row % 2) {
+        type = JSBubbleMessageTypeIncoming;
+        bubbleColor = [UIColor js_bubbleLightGrayColor];
+        textColor = [UIColor darkTextColor];
+    }
+    else {
+        type = JSBubbleMessageTypeOutgoing;
+        bubbleColor = [UIColor js_bubbleBlueColor];
+        textColor = [UIColor whiteColor];
+    }
+    
+    JSMessage *message = [[JSMessage alloc] initWithText:self.messages[indexPath.row]
+                                                    name:self.names[indexPath.row]
+                                                  avatar:[[UIImageView alloc] initWithImage:self.avatars[self.names[indexPath.row]]]
+                                               timestamp:self.timestamps[indexPath.row]
+                                              bubbleType:type
+                                             bubbleColor:bubbleColor
+                                               textColor:textColor
+                                               nameColor:nameColor
+                                          timestampColor:timestampColor];
+    
+    return message;
 }
 
 @end

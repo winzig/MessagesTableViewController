@@ -26,10 +26,6 @@
 
 - (void)sendPressed:(UIButton *)sender;
 
-- (BOOL)shouldHaveTimestampForRowAtIndexPath:(NSIndexPath *)indexPath;
-- (BOOL)shouldHaveAvatarForRowAtIndexPath:(NSIndexPath *)indexPath;
-- (BOOL)shouldHaveSubtitleForRowAtIndexPath:(NSIndexPath *)indexPath;
-
 - (BOOL)shouldAllowScroll;
 
 - (void)handleWillShowKeyboardNotification:(NSNotification *)notification;
@@ -205,40 +201,28 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    JSBubbleMessageType type = [self.delegate messageTypeForRowAtIndexPath:indexPath];
+    JSMessage *message = [self.dataSource messageForIndexPath:indexPath];
     
-    UIImageView *bubbleImageView = [self.delegate bubbleImageViewWithType:type
-                                                        forRowAtIndexPath:indexPath];
-    
-    BOOL hasTimestamp = [self shouldHaveTimestampForRowAtIndexPath:indexPath];
-    BOOL hasAvatar = [self shouldHaveAvatarForRowAtIndexPath:indexPath];
-	BOOL hasSubtitle = [self shouldHaveSubtitleForRowAtIndexPath:indexPath];
-    
-    NSString *CellIdentifier = [NSString stringWithFormat:@"MessageCell_%d_%d_%d_%d", (int)type, hasTimestamp, hasAvatar, hasSubtitle];
-    JSBubbleMessageCell *cell = (JSBubbleMessageCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    JSBubbleMessageCell *cell = (JSBubbleMessageCell *)[tableView dequeueReusableCellWithIdentifier:message.reuseIdentifier];
     
     if(!cell) {
-        cell = [[JSBubbleMessageCell alloc] initWithBubbleType:type
-                                               bubbleImageView:bubbleImageView
-                                                  hasTimestamp:hasTimestamp
-                                                     hasAvatar:hasAvatar
-                                                   hasSubtitle:hasSubtitle
-                                               reuseIdentifier:CellIdentifier];
+        cell = [[JSBubbleMessageCell alloc] initWithMessage:message];
     }
     
-    if(hasTimestamp) {
-        [cell setTimestamp:[self.dataSource timestampForRowAtIndexPath:indexPath]];
-    }
-	
-    if(hasAvatar) {
-        [cell setAvatarImageView:[self.dataSource avatarImageViewForRowAtIndexPath:indexPath]];
+    if(message.timestamp) {
+        [cell setTimestamp:message.timestamp];
     }
     
-	if(hasSubtitle) {
-		[cell setSubtitle:[self.dataSource subtitleForRowAtIndexPath:indexPath]];
+    if(message.avatar) {
+        [cell setAvatarImageView:message.avatar];
     }
     
-    [cell setMessage:[self.dataSource textForRowAtIndexPath:indexPath]];
+    if(message.name) {
+        [cell setName:message.name];
+    }
+    
+    [cell setMessage:message.text];
+    
     [cell setBackgroundColor:tableView.backgroundColor];
     
 	#if TARGET_IPHONE_SIMULATOR
@@ -246,10 +230,6 @@
 	#else
 		cell.bubbleView.textView.dataDetectorTypes = UIDataDetectorTypeAll;
 	#endif
-	
-    if([self.delegate respondsToSelector:@selector(configureCell:atIndexPath:)]) {
-        [self.delegate configureCell:cell atIndexPath:indexPath];
-    }
     
     return cell;
 }
@@ -258,79 +238,10 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSString *text = [self.dataSource textForRowAtIndexPath:indexPath];
-    
-    BOOL hasTimestamp = [self shouldHaveTimestampForRowAtIndexPath:indexPath];
-    BOOL hasAvatar = [self shouldHaveAvatarForRowAtIndexPath:indexPath];
-	BOOL hasSubtitle = [self shouldHaveSubtitleForRowAtIndexPath:indexPath];
-    
-    return [JSBubbleMessageCell neededHeightForBubbleMessageCellWithText:text
-                                                               timestamp:hasTimestamp
-                                                                  avatar:hasAvatar
-                                                                subtitle:hasSubtitle];
+    return [JSBubbleMessageCell neededHeightForBubbleMessageCellWithMessage:[self.dataSource messageForIndexPath:indexPath]];
 }
 
 #pragma mark - Messages view controller
-
-- (BOOL)shouldHaveTimestampForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    switch ([self.delegate timestampPolicy]) {
-        case JSMessagesViewTimestampPolicyAll:
-            return YES;
-            
-        case JSMessagesViewTimestampPolicyAlternating:
-            return indexPath.row % 2 == 0;
-            
-        case JSMessagesViewTimestampPolicyEveryThree:
-            return indexPath.row % 3 == 0;
-            
-        case JSMessagesViewTimestampPolicyEveryFive:
-            return indexPath.row % 5 == 0;
-            
-        case JSMessagesViewTimestampPolicyCustom:
-            if([self.delegate respondsToSelector:@selector(hasTimestampForRowAtIndexPath:)])
-                return [self.delegate hasTimestampForRowAtIndexPath:indexPath];
-            
-        default:
-            return NO;
-    }
-}
-
-- (BOOL)shouldHaveAvatarForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-	switch ([self.delegate avatarPolicy]) {
-        case JSMessagesViewAvatarPolicyAll:
-            return YES;
-            
-        case JSMessagesViewAvatarPolicyIncomingOnly:
-            return [self.delegate messageTypeForRowAtIndexPath:indexPath] == JSBubbleMessageTypeIncoming;
-			
-		case JSMessagesViewAvatarPolicyOutgoingOnly:
-			return [self.delegate messageTypeForRowAtIndexPath:indexPath] == JSBubbleMessageTypeOutgoing;
-            
-        case JSMessagesViewAvatarPolicyNone:
-        default:
-            return NO;
-    }
-}
-
-- (BOOL)shouldHaveSubtitleForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    switch ([self.delegate subtitlePolicy]) {
-        case JSMessagesViewSubtitlePolicyAll:
-            return YES;
-        
-        case JSMessagesViewSubtitlePolicyIncomingOnly:
-            return [self.delegate messageTypeForRowAtIndexPath:indexPath] == JSBubbleMessageTypeIncoming;
-            
-        case JSMessagesViewSubtitlePolicyOutgoingOnly:
-            return [self.delegate messageTypeForRowAtIndexPath:indexPath] == JSBubbleMessageTypeOutgoing;
-            
-        case JSMessagesViewSubtitlePolicyNone:
-        default:
-            return NO;
-    }
-}
 
 - (void)finishSend
 {
